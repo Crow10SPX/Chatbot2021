@@ -1,0 +1,30 @@
+{
+    "menu" : {
+        "entree" :
+            {
+                "quiche lorraine" : 5.00,
+                "cheese souffle" : 8.00,
+                "flamiche" : 6.00
+            },
+        "main" :
+            {
+                "duck a l'orange" : 18.00,
+                "chicken dijon" : 23.00,
+                "croque madame" : 15.00 
+            },
+        "dessert" :
+            {
+                "crepes" : 12.00,
+                "creme brulee" : 10.00,
+                "macarons" : 8.00
+                
+            },
+        "side" :
+            {
+                "pommes frites" : 6.00,
+                "truffade" : 5.00
+                
+            }
+        }
+    }
+    
