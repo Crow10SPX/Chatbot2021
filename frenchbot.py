@@ -40,7 +40,7 @@ class Frenchbot:
         self.__vix = 1 
         self.__voice = self.__voices[self.__vix].id
         self.__engine.setProperty('voice', self.__voice)
-        self.__engine.setProperty('rate', 40000000) #400
+        self.__engine.setProperty('rate', 400) 
         self.__engine.setProperty('volume', 2.0)
         
     def say(self, words):
@@ -48,14 +48,19 @@ class Frenchbot:
         self.__engine.runAndWait()
         
     def __init__(self):
+        self.jsonMenu = self.returnMenu()["menu"]
         self.__fileName = "orders.json"
         self.orderDict = {}
         self.mainFunction = ["previous","order","menu","exit"]
         self.choice = ["yes", "no"]
-        self.getOrdersFromFile()
         self.initVoice()
         self.startUp()
-
+        try:
+            with open(self.__fileName, 'r') as f:
+                self.__orders = json.load(f)
+        except FileNotFoundError:
+            self.__orders = {}
+        self.getOrdersFromFile()
         
     def startUp(self):
         print("Welcome to Frenchbot!")
@@ -63,42 +68,48 @@ class Frenchbot:
         self.getNameSpacy()
         self.getMainFunction()
         
+    def storeOrdersToFile(self):
+        with open(self.__fileName, 'w') as f:
+            json.dump(self.__orders, f)
+            
     def getOrdersFromFile(self):
         try:
-            with open("orders.json", 'r') as f:
-                self.orders1 = json.load(f)
+            with open(self.__fileName, 'r') as f:
+                self.__orders = json.load(f)
         except FileNotFoundError:
-            self.orders1 = {}
+            self.__orders = {}
             
     def displayOrdersForCust(self, name):
-        orderList = self.orders1[name]
+        orderList = self.__orders[self.name]
         print(f"Customer: {self.name.title()} :")
         for order in orderList:
             print(f"Order Number: {order}:")
             for dish in orderList[order]:
-                print(f"> {dish.title():15s} ${self.getPrice(dish):.2f}")
+                print(f"> {dish.title():15s} ${self.getPrice(dish)}")
         print()
         
     def displayOrders(self, name=""):
         print("Order History")
-        if self.orders1:
+        if self.__orders:
             if name:
                 self.displayOrdersForCust(name)
             else:
-                for name in self.orders1:
+                for name in self.__orders:
                     self.displayOrdersForCust(name)
         else:
             print("No Orders found")
             
     def insertOrder(self, name, choices):
+
         try:
-            with open(self.__fileName, 'r') as f:
+            with open("orders.json", 'r') as f:
                 self.orders1 = json.load(f)
         except FileNotFoundError:
             self.orders1 = {}
+
             
-        if name in (self.orders1.keys()):
-            orderList = self.orders1[self.name]
+        if name in list(self.orders1.keys()):
+            orderList = self.orders1[name]
             nextOrder = len(orderList) + 1
         else:
             orderList = {}
@@ -106,11 +117,36 @@ class Frenchbot:
         orderList[nextOrder] = choices
         self.orders1[name] = orderList
         with open("orders.json", 'w+') as f:
-            self.orderDict = (f"{self.name}: {nextOrder}: {self.orderDict}")
-            json.dump(dict(self.orderDict), f)
-        print(f"Order Saved for {self.name}, {self.orders1}")
-        self.exitTask()
+            json.dump(self.orders1, f)
+        print(f"Order Saved for {name} {self.orders1}")
         exit()
+
+    def returnFoodItems(self):
+        finalList = []
+        for category in self.jsonMenu:
+            for food in self.jsonMenu[category]:
+                finalList.append(food)
+        return finalList
+
+    def returnFoodPrices(self):
+        finalList = []
+        for category in self.jsonMenu:
+            for food in self.jsonMenu[category]:
+                finalList.append(self.jsonMenu[category][food])
+        return finalList
+
+    def returnMenu(self):
+        try:
+            with open("menu.json", 'r') as f:
+                self.menu = json.load(f)
+        except FileNotFoundError:
+            self.menu = {}
+        return self.menu
+    
+    def getPrice(self, dish):
+        mealPrice = []
+        if dish in self.returnFoodItems():
+            return self.returnFoodPrices()[self.returnFoodItems().index(dish)]
                  
     def getMeal(self, name):
         choices = []
@@ -147,7 +183,7 @@ class Frenchbot:
                                 (match, confidence) = process.extractOne(finishOrder, self.choice)
                                 if match == "yes" and confidence >= 60:
                                     self.exitTask()
-                                    exit() 
+                                    break
                                 elif match == 'no' and confidence >= 60:
                                     self.getMeal()
                             else:
@@ -167,8 +203,8 @@ class Frenchbot:
             else:
                 self.say("Not a valid choice")
                 print("Not a valid choice.")
-            return mealPrice 
-        self.getPrice = mealPrice
+            return mealPrice
+            
                       
         
                         
